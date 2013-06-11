@@ -198,7 +198,12 @@ module Sidekiq
           options[:tag] ||= default_tag
         elsif options[:app_type] == :rack
           Dir["workers/*"].each do |file|
-            require "#{Dir.pwd}/workers/#{File.basename(file, File.extname(file))}"
+            require file unless file.end_with?('views') || file.end_with?('config')
+            if file.end_with?('config')
+              Dir["workers/config/*"].each do |subfile|
+                require subfile
+              end
+            end
           end
         end
       else
