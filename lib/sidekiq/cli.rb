@@ -190,11 +190,17 @@ module Sidekiq
       raise ArgumentError, "#{options[:require]} does not exist" unless File.exist?(options[:require])
 
       if File.directory?(options[:require])
-        require 'rails'
-        require 'sidekiq/rails'
-        require File.expand_path("#{options[:require]}/config/environment.rb")
-        ::Rails.application.eager_load!
-        options[:tag] ||= default_tag
+        if options[:app_type] == :rails
+          require 'rails'
+          require 'sidekiq/rails'
+          require File.expand_path("#{options[:require]}/config/environment.rb")
+          ::Rails.application.eager_load!
+          options[:tag] ||= default_tag
+        elsif options[:app_type] == :rack
+          Dir["workers/*"].each do |file|
+            require "#{Dir.pwd}/workers/#{File.basename(file, File.extname(file))}"
+          end
+        end
       else
         require options[:require]
       end
@@ -215,13 +221,21 @@ module Sidekiq
       options[:queues] << 'default' if options[:queues].empty?
 
       if !File.exist?(options[:require]) ||
-         (File.directory?(options[:require]) && !File.exist?("#{options[:require]}/config/application.rb"))
+          (File.directory?(options[:require]) &&
+              !File.exist?("#{options[:require]}/config/application.rb") &&
+              !File.exist?("#{options[:require]}/config.ru"))
         logger.info "=================================================================="
-        logger.info "  Please point sidekiq to a Rails 3 application or a Ruby file    "
+        logger.info "  Please point sidekiq to a Rails 3 application, rack application or a Ruby file    "
         logger.info "  to load your worker classes with -r [DIR|FILE]."
         logger.info "=================================================================="
         logger.info @parser
         die(1)
+      else
+        if File.exist?("#{options[:require]}/config/application.rb")
+          options[:app_type] = :rails
+        elsif File.exist?("#{options[:require]}/config.ru")
+          options[:app_type] = :rack
+        end
       end
     end
 
