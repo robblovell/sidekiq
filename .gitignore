@@ -7,3 +7,4 @@ dump.rdb
 .rbx
 coverage/
 .sass-cache/
+.idea
