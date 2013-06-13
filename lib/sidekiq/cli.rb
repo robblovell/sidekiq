@@ -197,7 +197,7 @@ module Sidekiq
           ::Rails.application.eager_load!
           options[:tag] ||= default_tag
         elsif options[:app_type] == :rack
-          Dir["ap/workers/*"].each do |file|
+          Dir["app/workers/*"].each do |file|
             require "#{Dir.pwd}/workers/#{File.basename(file, File.extname(file))}" unless file.end_with?('views')
           end
           Dir["config/*"].each do |file|
