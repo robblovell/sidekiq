@@ -198,7 +198,7 @@ module Sidekiq
           options[:tag] ||= default_tag
         elsif options[:app_type] == :rack
           Dir["config/*"].each do |file|
-            require "#{Dir.pwd}/config/#{File.basename(file, File.extname(file))}" unless file.end_with?('yml') || !file.include?('config')
+            require "#{Dir.pwd}/config/#{File.basename(file, File.extname(file))}" unless file.end_with?('yml') || !file[7..-1].include?('config')
           end
           Dir["app/workers/*"].each do |file|
             require "#{Dir.pwd}/app/workers/#{File.basename(file, File.extname(file))}" unless file.end_with?('views')
